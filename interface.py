@@ -12,6 +12,7 @@ from PySide6.QtCore import Qt, Signal, QSize, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QFont, QPalette, QColor, QLinearGradient, QBrush, QIcon, QPixmap
 from calculadora import Calculadora3D
 from banco_dados import BancoDados
+from updater import UpdateManager
 
 class Interface3D(QMainWindow):
     """Janela principal do aplicativo com tema escuro moderno"""
@@ -40,6 +41,9 @@ class Interface3D(QMainWindow):
         # Carregar dados iniciais
         self.carregar_pedidos()
         self.atualizar_estatisticas()
+
+        # Configurar sistema de atualizações
+        self.setup_update_system()
     
     def aplicar_tema_escuro(self):
         """Aplica um tema escuro moderno"""
@@ -1054,3 +1058,50 @@ class Interface3D(QMainWindow):
 """
         
         self.stats_text.setText(texto)
+
+    def setup_update_system(self):
+        """Configura o sistema de atualizações"""
+        self.update_manager = UpdateManager(os.path.dirname(os.path.abspath(__file__)))
+        
+        # Verificar atualizações em background (apenas se já passou 24h)
+        if self.update_manager.should_check_for_updates():
+            self.update_manager.check_for_updates(self)
+        
+        # Criar ação no menu para verificar manualmente
+        self.create_update_menu()
+
+    def create_update_menu(self):
+        """Cria menu de atualizações na barra de menu"""
+        menubar = self.menuBar()
+        
+        # Menu Ajuda
+        ajuda_menu = menubar.addMenu("Ajuda")
+        
+        # Ação de verificar atualizações
+        check_update_action = ajuda_menu.addAction("Verificar Atualizações")
+        check_update_action.triggered.connect(self.manual_update_check)
+        
+        ajuda_menu.addSeparator()
+        
+        # Ação sobre
+        about_action = ajuda_menu.addAction("Sobre")
+        about_action.triggered.connect(self.show_about)
+
+    def manual_update_check(self):
+        """Verifica manualmente por atualizações"""
+        self.update_manager.check_for_updates(self, show_no_update_msg=True)
+
+    def show_about(self):
+        """Mostra diálogo sobre com informações da versão"""
+        QMessageBox.about(
+            self,
+            "Sobre o Impressão 3D Pro",
+            f"""
+            <h3>Impressão 3D Pro Calculator</h3>
+            <p>Versão: {self.update_manager.current_version}</p>
+            <p>Calculadora profissional para precificação de impressões 3D</p>
+            <br>
+            <p>© 2024 - Todos os direitos reservados</p>
+            <p>Desenvolvido com Python e PySide6</p>
+            """
+        )
