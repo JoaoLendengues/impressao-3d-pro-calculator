@@ -13,6 +13,7 @@ from PySide6.QtGui import QFont, QPalette, QColor, QLinearGradient, QBrush, QIco
 from calculadora import Calculadora3D
 from banco_dados import BancoDados
 from updater import UpdateManager
+import os
 
 class Interface3D(QMainWindow):
     """Janela principal do aplicativo com tema escuro moderno"""
@@ -1061,29 +1062,33 @@ class Interface3D(QMainWindow):
 
     def setup_update_system(self):
         """Configura o sistema de atualizações"""
-        self.update_manager = UpdateManager(os.path.dirname(os.path.abspath(__file__)))
+        # Configure SEU repositório aqui
+        REPO_OWNER = "JoaoLendengues"  # ← MUDE PARA SEU USUÁRIO
+        REPO_NAME = "impressao-3d-pro-calculator"  # ← NOME DO SEU REPO
         
-        # Verificar atualizações em background (apenas se já passou 24h)
-        if self.update_manager.should_check_for_updates():
-            self.update_manager.check_for_updates(self)
+        app_path = os.path.dirname(os.path.abspath(__file__))
+        self.update_manager = UpdateManager(app_path, REPO_OWNER, REPO_NAME)
         
-        # Criar ação no menu para verificar manualmente
-        self.create_update_menu()
+        # Verificar atualizações ao iniciar
+        self.update_manager.check_for_updates(self)
+        
+        # Criar menu de ajuda
+        self.create_help_menu()
 
-    def create_update_menu(self):
-        """Cria menu de atualizações na barra de menu"""
+    def create_help_menu(self):
+        """Cria menu Ajuda com opção de verificar atualizações"""
         menubar = self.menuBar()
         
-        # Menu Ajuda
+        # Criar menu Ajuda se não existir
         ajuda_menu = menubar.addMenu("Ajuda")
         
-        # Ação de verificar atualizações
-        check_update_action = ajuda_menu.addAction("Verificar Atualizações")
-        check_update_action.triggered.connect(self.manual_update_check)
+        # Ação para verificar atualizações manualmente
+        check_action = ajuda_menu.addAction("Verificar Atualizações")
+        check_action.triggered.connect(self.manual_update_check)
         
         ajuda_menu.addSeparator()
         
-        # Ação sobre
+        # Ação Sobre
         about_action = ajuda_menu.addAction("Sobre")
         about_action.triggered.connect(self.show_about)
 
@@ -1092,16 +1097,17 @@ class Interface3D(QMainWindow):
         self.update_manager.check_for_updates(self, show_no_update_msg=True)
 
     def show_about(self):
-        """Mostra diálogo sobre com informações da versão"""
+        """Mostra informações sobre o aplicativo"""
+        from PySide6.QtWidgets import QMessageBox
+        
         QMessageBox.about(
             self,
-            "Sobre o Impressão 3D Pro",
+            "Sobre",
             f"""
             <h3>Impressão 3D Pro Calculator</h3>
             <p>Versão: {self.update_manager.current_version}</p>
-            <p>Calculadora profissional para precificação de impressões 3D</p>
+            <p>Calculadora profissional para impressão 3D</p>
             <br>
             <p>© 2024 - Todos os direitos reservados</p>
-            <p>Desenvolvido com Python e PySide6</p>
             """
         )

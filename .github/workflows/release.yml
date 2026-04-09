@@ -1,0 +1,28 @@
+name: Criar Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Criar arquivo ZIP
+      run: |
+        zip -r Impressao3DPro-${{ github.ref_name }}.zip . -x "*.git*" "*__pycache__*" "*.db"
+    
+    - name: Criar Release no GitHub
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "Impressao3DPro-*.zip"
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
