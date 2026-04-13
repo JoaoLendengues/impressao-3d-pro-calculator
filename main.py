@@ -11,7 +11,7 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
 
     # Configurar estilo
-    app.setStyle('Fusion')
+    app.setStyle('Windows')
 
     # Criar e mostrar janela
     window = Interface3D()
