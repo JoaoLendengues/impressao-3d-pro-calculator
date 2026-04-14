@@ -315,6 +315,10 @@ class Interface3D(QMainWindow):
         self.aba_config = QWidget()
         self.tabs.addTab(self.aba_config, "  ⚙️  CONFIGURAÇÕES  ")
         self.setup_aba_configuracoes()
+
+        self.aba_config = QWidget()
+        self.tabs.addTab(self.aba_config, '🆘 AJUDA')
+        self.setup_aba_ajuda()
         
         # Barra de status
         self.status_bar = self.statusBar()
@@ -686,6 +690,19 @@ class Interface3D(QMainWindow):
         main_layout = QVBoxLayout(self.aba_config)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(scroll)
+
+    def setup_aba_ajuda(self):
+        """Configura a aba de ajuda com design moderno"""
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        
+        content = QWidget()
+        scroll.setWidget(content)
+        
+        layout = QHBoxLayout(content)
+        layout.setSpacing(25)
+        layout.setContentsMargins(30, 30, 30, 30)
     
     def calcular(self):
         """Realiza o cálculo da peça"""
@@ -1072,7 +1089,7 @@ class Interface3D(QMainWindow):
         # Usar Timer para verificar após a interface carregar
         from PySide6.QtCore import QTimer
         QTimer.singleShot(1000, lambda: self.update_manager.check_for_updates(self))
-        
+
         # Criar menu de ajuda
         self.create_help_menu()
 
@@ -1103,7 +1120,7 @@ class Interface3D(QMainWindow):
         
         QMessageBox.about(
             self,
-            "Sobre",
+            "Sob",
             f"""
             <h3>Impressão 3D Pro Calculator</h3>
             <p>Versão: {self.update_manager.current_version}</p>
