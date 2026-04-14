@@ -1069,8 +1069,9 @@ class Interface3D(QMainWindow):
         app_path = os.path.dirname(os.path.abspath(__file__))
         self.update_manager = UpdateManager(app_path, REPO_OWNER, REPO_NAME)
         
-        # Verificar atualizações ao iniciar
-        self.update_manager.check_for_updates(self)
+        # Usar Timer para verificar após a interface carregar
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(1000, lambda: self.update_manager.check_for_updates(self))
         
         # Criar menu de ajuda
         self.create_help_menu()
@@ -1111,3 +1112,20 @@ class Interface3D(QMainWindow):
             <p>© 2024 - Todos os direitos reservados</p>
             """
         )
+
+    def closeEvent(self, event):
+        """Evento chamado quando a janela é fechada"""
+        # Limpar o update manager
+
+        if hasattr(self, 'update_manager'):
+            if hasattr(self.update_manager, 'checker') and self.update_manager.checker:
+                self.update_manager.checker.stop()
+                self.update_manager.checker.quit()
+                self.update_manager.checker.wait()
+            if hasattr(self.update_manager, 'downloader') and self.update_manager.checker:
+                self.update_manager.downloader.stop()
+                self.update_manager.downloader.quit()
+                self.update_manager.downloader.wait()
+
+        # Aceitar o fechamento
+        event.accept()

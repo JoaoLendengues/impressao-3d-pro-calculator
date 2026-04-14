@@ -11,7 +11,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 
 import requests
-from PySide6.QtCore import QThread, Signal, QObject
+from PySide6.QtCore import QThread, Signal, QObject, QTimer
 from PySide6.QtWidgets import QMessageBox, QProgressDialog, QApplication
 
 
@@ -28,6 +28,7 @@ class UpdateChecker(QThread):
         self.repo_owner = repo_owner
         self.repo_name = repo_name
         self.check_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
+        self._is_running = True
     
     def run(self):
         """Verifica por atualizações"""
@@ -35,6 +36,9 @@ class UpdateChecker(QThread):
             response = requests.get(self.check_url, timeout=10)
             response.raise_for_status()
             
+            if not self._is_running:
+                return
+                
             release_data = response.json()
             latest_version = release_data.get('tag_name', '').lstrip('v')
             
@@ -51,7 +55,12 @@ class UpdateChecker(QThread):
                 self.no_update.emit()
                 
         except Exception as e:
-            self.error_occurred.emit(f"Erro: {str(e)}")
+            if self._is_running:
+                self.error_occurred.emit(f"Erro: {str(e)}")
+    
+    def stop(self):
+        """Para a thread"""
+        self._is_running = False
     
     def _is_newer_version(self, latest: str, current: str) -> bool:
         """Compara versões"""
@@ -86,6 +95,7 @@ class DownloadWorker(QThread):
     def __init__(self, url: str):
         super().__init__()
         self.url = url
+        self._is_running = True
     
     def run(self):
         try:
@@ -100,17 +110,23 @@ class DownloadWorker(QThread):
             
             with open(zip_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
+                    if chunk and self._is_running:
                         f.write(chunk)
                         downloaded += len(chunk)
                         if total_size > 0:
                             progress = int((downloaded / total_size) * 100)
                             self.progress.emit(progress)
             
-            self.finished.emit(zip_path)
+            if self._is_running:
+                self.finished.emit(zip_path)
             
         except Exception as e:
-            self.error.emit(str(e))
+            if self._is_running:
+                self.error.emit(str(e))
+    
+    def stop(self):
+        """Para a thread"""
+        self._is_running = False
 
 
 class UpdateManager(QObject):
@@ -123,6 +139,8 @@ class UpdateManager(QObject):
         self.repo_name = repo_name
         self.version_file = self.app_path / 'version.json'
         self.current_version = self.load_current_version()
+        self.checker = None
+        self.downloader = None
     
     def load_current_version(self) -> str:
         """Carrega a versão atual"""
@@ -137,7 +155,13 @@ class UpdateManager(QObject):
     
     def check_for_updates(self, parent_widget=None, show_no_update_msg=False):
         """Verifica por atualizações"""
-        checker = UpdateChecker(self.current_version, self.repo_owner, self.repo_name)
+        # Limpar checker anterior se existir
+        if self.checker is not None:
+            self.checker.stop()
+            self.checker.quit()
+            self.checker.wait()
+        
+        self.checker = UpdateChecker(self.current_version, self.repo_owner, self.repo_name)
         
         def on_update_available(update_info):
             self.prompt_update_dialog(update_info, parent_widget)
@@ -151,12 +175,13 @@ class UpdateManager(QObject):
             if show_no_update_msg and parent_widget:
                 QMessageBox.warning(parent_widget, "Erro", error_msg)
         
-        checker.update_available.connect(on_update_available)
-        checker.no_update.connect(on_no_update)
-        checker.error_occurred.connect(on_error)
-        checker.start()
+        self.checker.update_available.connect(on_update_available)
+        self.checker.no_update.connect(on_no_update)
+        self.checker.error_occurred.connect(on_error)
+        self.checker.finished.connect(self.checker.deleteLater)
+        self.checker.start()
         
-        return checker
+        return self.checker
     
     def prompt_update_dialog(self, update_info: dict, parent_widget=None):
         """Mostra diálogo de atualização"""
@@ -191,7 +216,13 @@ class UpdateManager(QObject):
         progress.setWindowModality(2)
         progress.setMinimumDuration(0)
         
-        downloader = DownloadWorker(update_info['download_url'])
+        # Limpar downloader anterior
+        if self.downloader is not None:
+            self.downloader.stop()
+            self.downloader.quit()
+            self.downloader.wait()
+        
+        self.downloader = DownloadWorker(update_info['download_url'])
         
         def on_progress(value):
             progress.setValue(value)
@@ -206,13 +237,21 @@ class UpdateManager(QObject):
             progress.close()
             QMessageBox.critical(parent_widget, "Erro", f"Falha no download: {error_msg}")
         
-        downloader.progress.connect(on_progress)
-        downloader.finished.connect(on_finished)
-        downloader.error.connect(on_error)
+        self.downloader.progress.connect(on_progress)
+        self.downloader.finished.connect(on_finished)
+        self.downloader.error.connect(on_error)
+        self.downloader.finished.connect(self.downloader.deleteLater)
         
-        progress.canceled.connect(downloader.terminate)
-        downloader.start()
+        progress.canceled.connect(self.cancel_download)
+        self.downloader.start()
         progress.exec()
+    
+    def cancel_download(self):
+        """Cancela o download em andamento"""
+        if self.downloader is not None:
+            self.downloader.stop()
+            self.downloader.quit()
+            self.downloader.wait()
     
     def install_update(self, zip_path: str, parent_widget=None):
         """Instala a atualização"""
@@ -226,7 +265,10 @@ class UpdateManager(QObject):
             script_path = self.create_update_script(extract_dir)
             
             # Executar script
-            os.startfile(script_path)
+            if sys.platform == 'win32':
+                os.startfile(script_path)
+            else:
+                os.system(f'python "{script_path}" &')
             
             # Fechar aplicativo
             QApplication.quit()
@@ -255,7 +297,7 @@ def main():
             
             if os.path.isfile(src):
                 shutil.copy2(src, dst)
-            elif os.path.isdir(src) and item not in ['database', '__pycache__']:
+            elif os.path.isdir(src) and item not in ['database', '__pycache__', '.git']:
                 if os.path.exists(dst):
                     shutil.rmtree(dst)
                 shutil.copytree(src, dst)
@@ -264,7 +306,9 @@ def main():
         subprocess.Popen([sys.executable, os.path.join(app_dir, "main.py")])
         
     except Exception as e:
-        input(f"Erro: {{e}}\\nPressione Enter...")
+        with open(os.path.join(app_dir, "update_error.log"), 'w') as f:
+            f.write(str(e))
+        input(f"Erro na atualização: {{e}}\\nPressione Enter para sair...")
 
 if __name__ == "__main__":
     main()
@@ -275,3 +319,14 @@ if __name__ == "__main__":
         
         return script_path
     
+    def __del__(self):
+        """Destrutor para limpar threads"""
+        if self.checker is not None:
+            self.checker.stop()
+            self.checker.quit()
+            self.checker.wait()
+        if self.downloader is not None:
+            self.downloader.stop()
+            self.downloader.quit()
+            self.downloader.wait()
+            
