@@ -700,10 +700,548 @@ class Interface3D(QMainWindow):
         content = QWidget()
         scroll.setWidget(content)
         
-        layout = QHBoxLayout(content)
-        layout.setSpacing(25)
+        layout = QVBoxLayout(content) # Mudando para VBox para organizar melhor
+        layout.setSpacing(20)
         layout.setContentsMargins(30, 30, 30, 30)
+
+        # ========== SEÇÃO 1: Cabeçalho da Ajuda ==========
+        header_widget = QWidget()
+        header_widget.setStyleSheet("""
+        QWidget {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #1a1f2e, stop:1 #252b3d);
+            border-radius: 15px;
+            }
+        """)
+        header_layout = QVBoxLayout(header_widget)
+        header_layout.setContentsMargins(25, 25, 25, 25)
+
+        titulo = QLabel('📚 Central de Ajuda')
+        titulo.setStyleSheet("""
+            font-size: 24px;
+            font-weight: bold;
+            color: #e4e6eb;
+        """)
+        header_layout.addWidget(titulo)
+
+        subtitulo = QLabel('Tudo que você precisa saber para usar o Impressão 3D pro Calculator')
+        subtitulo.setStyleSheet("""
+            font-size: 13px;
+            color: #8b92a8;
+        """)
+        header_layout.addWidget(header_widget)
+
+        # ========== SEÇÃO 2: Cards de Atalhos Rápidos ==========
+        cards_layout = QHBoxLayout()
+        cards_layout.setSpacing(15)
+
+        # Card 1 - Como Calcular
+        card_calcular = self.criar_card_ajuda(
+            '🧮',
+            'Como calcular?',
+            'Preencha os dados da peça e clique em CALCULAR PESO',
+            '#4f46e5'
+        )
+        cards_layout.addWidget(card_calcular)
+
+        # Card 2 - Como Salvar
+        card_salvar = self.criar_card_ajuda(
+            '💾',
+            'Como salvar?',
+            'Após calcular, clique em SALVAR PEDIDO para registrar',
+            '#7c3aed'
+        )
+        cards_layout.addWidget(card_salvar)
+
+        # Card 3 - Status
+        cards_status = self.criar_card_ajuda(
+            '🔄️',
+            'Status dos Pedidos',
+            'Acompanhe seus pedidos com 4 status diferentes',
+            '#ec4899'
+        )
+        cards_layout.addWidget(cards_status)
+
+        # ========== SEÇÃO 3: Guia Detalhado com Abas ==========
+        guia_widget = QWidget()
+        guia_widget.setStyleSheet("""
+            QWidget {
+                background-color: #13161f;
+                border-radius: 15px;
+            }'
+        """)
+        guia_layout = QVBoxLayout(guia_widget)
+        guia_layout.setContentsMargins(20, 20, 20, 20)
+
+        guia_titulo = QLabel('📖 Guia Detalhado')
+        guia_titulo.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #e4e6eb;
+            margin-bottom: 10px;
+        """)
+        guia_layout.addWidget(guia_titulo)
+
+        # Criar abas internas para o guia
+        guia_tabs = QTableWidget()
+        guia_tabs.setStyleSheet("""
+            QTabWidget::pane {
+                background-color: #1a1f2e;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            QTabBar::tab {
+                background: #252b3d;
+                color: #8b92a8;
+                padding: 8px 20px;
+                border-radius: 8px;
+                margin-right: 5px;
+            }
+            QTabBar::tab:selected {
+                background: #4f46e5;
+                color: white;
+            }
+        """)
+
+        # Aba 1 - Como Usar
+        aba_como_usar = self.criar_aba_como_usar()
+        guia_tabs.addTab(aba_como_usar, '🎯 Como Usar')
+
+        # Aba 2 - Fórmulas
+        aba_formulas = self.criar_aba_formulas()
+        guia_tabs.addTab(aba_formulas, '📊 Fórmulas')
+
+        # Aba 3 - Dicas
+        aba_dicas = self.criar_aba_dicas()
+        guia_tabs.addTab(aba_dicas, '💡 Dicas')
+
+        # Aba 4 - FAQ
+        aba_faq = self.criar_aba_faq()
+        guia_tabs.addTab(aba_faq, '❓ FAQ')
+
+        guia_layout.addWidget(guia_widget)
+
+        # ========== SEÇÃO 4: Contato e Suporte ==========
+        contato_widget = QWidget()
+        contato_widget.setStyleSheet("""
+            QWidget {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #1a1f2e, stop:1 #13161f);
+                border-radius: 15px;
+            }
+        """)
+        contato_layout = QHBoxLayout(contato_widget)
+        contato_layout.setContentsMargins(25, 20, 25, 20)
+
+        # Informações de contato
+        info_layout = QVBoxLayout()
+        contato_titulo = QLabel('📞 Precisa de mais ajuda?')
+        contato_titulo.setStyleSheet('font-size: 16px; font-weight: bold; color: #e4e6eb;')
+        info_layout.addWidget(contato_titulo)
+
+        contato_desc = QLabel('Entre em contato para através dos canais abaixo:')
+        contato_desc.setStyleSheet('color: #8b92a8;')
+        info_layout.addWidget(contato_desc)
+
+        # Botões de contato
+        botoes_layout = QHBoxLayout()
+        botoes_layout.setSpacing(10)
+        
+        email_btn = QPushButton("📧 Email de Suporte")
+        email_btn.setCursor(Qt.PointingHandCursor)
+        email_btn.clicked.connect(lambda: self.abrir_link("mailto:suporte@impressao3dpro.com"))
+        email_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #4f46e5;
+                padding: 8px 16px;
+                border-radius: 8px;
+            }
+            QPushButton:hover {
+                background-color: #6366f1;
+            }
+        """)
+        botoes_layout.addWidget(email_btn)
+        
+        github_btn = QPushButton("🐙 GitHub")
+        github_btn.setCursor(Qt.PointingHandCursor)
+        github_btn.clicked.connect(lambda: self.abrir_link("https://github.com/SEU_USUARIO/impressao-3d-pro-calculator"))
+        github_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2d3748;
+                padding: 8px 16px;
+                border-radius: 8px;
+            }
+            QPushButton:hover {
+                background-color: #4a5568;
+            }
+        """)
+        botoes_layout.addWidget(github_btn)
+        
+        docs_btn = QPushButton("📖 Documentação")
+        docs_btn.setCursor(Qt.PointingHandCursor)
+        docs_btn.clicked.connect(lambda: self.abrir_link("https://github.com/SEU_USUARIO/impressao-3d-pro-calculator/wiki"))
+        docs_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2d3748;
+                padding: 8px 16px;
+                border-radius: 8px;
+            }
+            QPushButton:hover {
+                background-color: #4a5568;
+            }
+        """)
+        botoes_layout.addWidget(docs_btn)
+        
+        info_layout.addLayout(botoes_layout)
+        contato_layout.addLayout(info_layout)
+        
+        # Versão do app
+        versao_label = QLabel(f"Versão {self.update_manager.current_version}")
+        versao_label.setStyleSheet("""
+            color: #6b7280;
+            font-size: 11px;
+            padding: 5px 10px;
+            background-color: #1a1f2e;
+            border-radius: 15px;
+        """)
+        contato_layout.addWidget(versao_label, alignment=Qt.AlignRight)
+        
+        layout.addWidget(contato_widget)
+        
+        # Adicionar scroll ao layout principal
+        main_layout = QVBoxLayout(self.aba_ajuda)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(scroll)
+
+    def criar_card_ajuda(self, icone: str, titulo: str, descricao: str, cor: str):
+        """Cria um card de ajuda estilizado"""
+        card = QWidget()
+        card.setStyleSheet(f"""
+            QWidget {{
+                background-color: #1a1f2e;
+                border-radius: 12px;
+                border: 1px solid #2d3246;
+            }}
+            QWidget:hover {{
+                border-color: {cor};
+                background-color: #1e2436;
+            }}
+        """)
+        card.setMinimumHeight(120)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(15, 15, 15, 15)
+        
+        # Ícone
+        icon_label = QLabel(icone)
+        icon_label.setStyleSheet(f"""
+            font-size: 32px;
+            background-color: {cor}20;
+            padding: 8px;
+            border-radius: 10px;
+        """)
+        layout.addWidget(icon_label, alignment=Qt.AlignCenter)
+        
+        # Título
+        title_label = QLabel(titulo)
+        title_label.setStyleSheet("""
+            font-size: 14px;
+            font-weight: bold;
+            color: #e4e6eb;
+            margin-top: 10px;
+        """)
+        layout.addWidget(title_label, alignment=Qt.AlignCenter)
+        
+        # Descrição
+        desc_label = QLabel(descricao)
+        desc_label.setStyleSheet("""
+            font-size: 11px;
+            color: #8b92a8;
+            margin-top: 5px;
+        """)
+        desc_label.setWordWrap(True)
+        desc_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(desc_label)
+        
+        return card
     
+    def criar_aba_como_usar(self):
+        """Cria a aba 'Como Usar' do guia"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(15)
+        
+        # Passo 1
+        passo1 = self.criar_passo_ajuda(
+            "1️⃣",
+            "Preencha os dados da impressão",
+            "Informe o nome do cliente, peso do material, tempo de impressão e todos os custos envolvidos."
+        )
+        layout.addWidget(passo1)
+        
+        # Passo 2
+        passo2 = self.criar_passo_ajuda(
+            "2️⃣",
+            "Clique em Calcular Preço",
+            "O sistema calculará automaticamente todos os custos e o valor final de venda com a margem de lucro definida."
+        )
+        layout.addWidget(passo2)
+        
+        # Passo 3
+        passo3 = self.criar_passo_ajuda(
+            "3️⃣",
+            "Salve o pedido",
+            "Após calcular, clique em 'Salvar Pedido' para registrar no sistema. O pedido aparecerá na aba 'Pedidos'."
+        )
+        layout.addWidget(passo3)
+        
+        # Passo 4
+        passo4 = self.criar_passo_ajuda(
+            "4️⃣",
+            "Acompanhe o status",
+            "Na aba 'Pedidos', você pode acompanhar o status de cada pedido e alterá-lo conforme o andamento."
+        )
+        layout.addWidget(passo4)
+        
+        layout.addStretch()
+        
+        return widget
+    
+    def criar_passo_ajuda(self, numero: str, titulo: str, descricao: str):
+        """Cria um item de passo de ajuda"""
+        widget = QWidget()
+        widget.setStyleSheet("""
+            QWidget {
+                background-color: #1a1f2e;
+                border-radius: 10px;
+            }
+        """)
+        
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(15)
+        
+        # Número/Ícone
+        num_label = QLabel(numero)
+        num_label.setStyleSheet("""
+            font-size: 28px;
+            min-width: 50px;
+        """)
+        layout.addWidget(num_label)
+        
+        # Texto
+        text_layout = QVBoxLayout()
+        
+        title_label = QLabel(titulo)
+        title_label.setStyleSheet("""
+            font-size: 14px;
+            font-weight: bold;
+            color: #e4e6eb;
+        """)
+        text_layout.addWidget(title_label)
+        
+        desc_label = QLabel(descricao)
+        desc_label.setStyleSheet("""
+            font-size: 12px;
+            color: #8b92a8;
+        """)
+        desc_label.setWordWrap(True)
+        text_layout.addWidget(desc_label)
+        
+        layout.addLayout(text_layout)
+        
+        return widget
+    
+    def criar_aba_formulas(self):
+        """Cria a aba de fórmulas do guia"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(15)
+
+        formulas = [
+            ("💰 Custo do Material", "Peso (g) / 1000 × Custo por kg (R$)"),
+            ("⚡ Custo de Energia", "(Potência (W) × Tempo (h)) / 1000 × Custo kWh (R$)"),
+            ("⏰ Custo do Tempo", "Tempo (h) × Taxa horária (R$/h)"),
+            ("📊 Custo Total", "Material + Energia + Tempo + Design"),
+            ("📈 Lucro", "Custo Total × (Margem % / 100)"),
+            ("🎯 Valor de Venda", "Custo Total + Lucro")
+        ]
+        for titulo , formula in formulas:
+            item = self.criar_item_formula(titulo, formula)
+            layout.addWidget(item)
+
+        layout.addStretch()
+
+        return widget
+    
+    def criar_item_formula(self, titulo: str, formula: str):
+        """Cria um item de fórmula"""
+        widget = QWidget()
+        widget.setStyleSheet("""
+            QWidget {
+                background-color: #1a1f2e;
+                border-radius: 10px;
+            }
+        """)
+
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(15, 12, 15, 12)
+
+        title_label = QLabel(titulo)
+        title_label.setStyleSheet("""
+            font-size: 13px;
+            font-weight: bold;
+            color: #e4e6eb;
+        """)
+        layout.addWidget(title_label)
+
+        formula_label = QLabel(formula)
+        formula_label.setStyleSheet("""
+            font-size: 12px;
+            color: #8b92a8;
+            font-family: 'Consolas', monospace;
+            margin-top: 5px;
+        """)
+        layout.addWidget(formula__label)
+
+        return widget
+    
+    def criar_aba_dicas(self):
+        """Cria a aba de dicas"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(15)
+        
+        dicas = [
+            ("🎯 Otimize seus custos", "Calcule o custo real de cada peça para precificar corretamente e maximizar seus lucros."),
+            ("📊 Use margens diferentes", "Clientes recorrentes podem ter margens diferentes. Ajuste conforme necessidade."),
+            ("⚡ Consumo de energia", "Verifique a potência real da sua impressora para calcular o custo exato de energia."),
+            ("💾 Backup dos dados", "O sistema salva automaticamente, mas faça backups periódicos do arquivo .db."),
+            ("🔄 Atualizações", "Mantenha o programa atualizado para ter as últimas funcionalidades e correções."),
+            ("📈 Acompanhe estatísticas", "Use a aba de configurações para ver estatísticas do seu negócio.")
+        ]
+        
+        for titulo, dica in dicas:
+            item = self.criar_item_dica(titulo, dica)
+            layout.addWidget(item)
+        
+        layout.addStretch()
+        
+        return widget
+    
+    def criar_item_dica(self, titulo: str, dica: str):
+        """Cria um item de dica"""
+        widget = QWidget()
+        widget.setStyleSheet("""
+            QWidget {
+                background-color: #1a1f2e;
+                border-radius: 10px;
+            }
+        """)
+        
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(15, 12, 15, 12)
+        layout.setSpacing(15)
+        
+        # Bullet point
+        bullet = QLabel("•")
+        bullet.setStyleSheet("""
+            font-size: 20px;
+            font-weight: bold;
+            color: #4f46e5;
+        """)
+        layout.addWidget(bullet)
+        
+        # Texto
+        text_layout = QVBoxLayout()
+        
+        title_label = QLabel(titulo)
+        title_label.setStyleSheet("""
+            font-size: 13px;
+            font-weight: bold;
+            color: #e4e6eb;
+        """)
+        text_layout.addWidget(title_label)
+        
+        desc_label = QLabel(dica)
+        desc_label.setStyleSheet("""
+            font-size: 12px;
+            color: #8b92a8;
+        """)
+        desc_label.setWordWrap(True)
+        text_layout.addWidget(desc_label)
+        
+        layout.addLayout(text_layout)
+        
+        return widget
+    
+    def criar_aba_faq(self):
+        """Cria a aba de FAQ"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(15)
+        
+        faqs = [
+            ("Como altero o status de um pedido?", "Selecione o pedido na tabela e clique em 'Alterar Status'."),
+            ("Posso editar um pedido depois de salvo?", "Por enquanto, você pode alterar o status e excluir. Edição completa virá em breve."),
+            ("Onde ficam salvos os dados?", "Os dados são salvos localmente no arquivo 'impressao_3d.db'."),
+            ("Como faço backup dos dados?", "Basta copiar o arquivo 'impressao_3d.db' para um local seguro."),
+            ("O programa atualiza sozinho?", "Sim, o sistema verifica automaticamente por atualizações ao iniciar."),
+            ("Preciso de internet para usar?", "Não, o programa funciona offline. Só precisa de internet para atualizações.")
+        ]
+        
+        for pergunta, resposta in faqs:
+            item = self.criar_item_faq(pergunta, resposta)
+            layout.addWidget(item)
+        
+        layout.addStretch()
+        
+        return widget
+    
+    def criar_item_faq(self, pergunta: str, resposta: str):
+        """Cria um item de FAQ"""
+        widget = QWidget()
+        widget.setStyleSheet("""
+            QWidget {
+                background-color: #1a1f2e;
+                border-radius: 10px;
+            }
+            QWidget:hover {
+                background-color: #1e2436;
+            }
+        """)
+        
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(15, 12, 15, 12)
+        layout.setSpacing(8)
+        
+        # Pergunta
+        pergunta_label = QLabel(f"❓ {pergunta}")
+        pergunta_label.setStyleSheet("""
+            font-size: 13px;
+            font-weight: bold;
+            color: #4f46e5;
+        """)
+        layout.addWidget(pergunta_label)
+        
+        # Resposta
+        resposta_label = QLabel(f"💡 {resposta}")
+        resposta_label.setStyleSheet("""
+            font-size: 12px;
+            color: #8b92a8;
+            margin-left: 20px;
+        """)
+        resposta_label.setWordWrap(True)
+        layout.addWidget(resposta_label)
+        
+        return widget
+    
+    def abrir_link(self, url: str):
+        """Abre um URL no navegador padrão"""
+        from PySide6.QtGui import QDesktopServices
+        from PySide6.QtCore import QUrl
+        QDesktopServices.openUrl(QUrl(url))
+        
     def calcular(self):
         """Realiza o cálculo da peça"""
         try:
