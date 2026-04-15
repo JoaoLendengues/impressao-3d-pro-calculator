@@ -32,6 +32,9 @@ class Interface3D(QMainWindow):
         
         # Carregar configurações
         self.carregar_configuracoes()
+
+        # Configurar sistema de atualizações
+        self.setup_update_system()
         
         # Configurar interface
         self.setup_ui()
@@ -316,8 +319,9 @@ class Interface3D(QMainWindow):
         self.tabs.addTab(self.aba_config, "  ⚙️  CONFIGURAÇÕES  ")
         self.setup_aba_configuracoes()
 
-        self.aba_config = QWidget()
-        self.tabs.addTab(self.aba_config, '🆘 AJUDA')
+        # Aba de ajuda
+        self.aba_ajuda = QWidget()
+        self.tabs.addTab(self.aba_ajuda, '❓ AJUDA')
         self.setup_aba_ajuda()
         
         # Barra de status
@@ -783,7 +787,7 @@ class Interface3D(QMainWindow):
         guia_layout.addWidget(guia_titulo)
 
         # Criar abas internas para o guia
-        guia_tabs = QTableWidget()
+        guia_tabs = QTabWidget()
         guia_tabs.setStyleSheet("""
             QTabWidget::pane {
                 background-color: #1a1f2e;
@@ -1102,7 +1106,7 @@ class Interface3D(QMainWindow):
             font-family: 'Consolas', monospace;
             margin-top: 5px;
         """)
-        layout.addWidget(formula__label)
+        layout.addWidget(formula_label)
 
         return widget
     
